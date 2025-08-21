@@ -1,6 +1,14 @@
-const domain = import.meta.env.VITE_JIRA_DOMAIN;
 const email = import.meta.env.VITE_JIRA_EMAIL;
 const token = import.meta.env.VITE_JIRA_API_TOKEN;
+
+// ✅ เลือก baseUrl ตาม environment
+const isDev = import.meta.env.MODE === "development";
+
+// Dev ใช้ vite proxy, Prod ใช้ CORS proxy
+const proxy = "https://cors-anywhere.herokuapp.com/";
+const domain = "https://sirisoftth.atlassian.net";
+
+const baseUrl = isDev ? "/jira" : `${proxy}${domain}`;
 
 const headers = {
   Authorization: "Basic " + btoa(`${email}:${token}`),
@@ -8,14 +16,16 @@ const headers = {
 };
 
 export async function fetchProjects() {
-  const res = await fetch(`${domain}/rest/api/3/project`, { headers });
+  const res = await fetch(`${baseUrl}/rest/api/3/project`, { headers });
+  if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
   return res.json();
 }
 
 export async function fetchSprints(boardId: number) {
-  const res = await fetch(`${domain}/rest/agile/1.0/board/${boardId}/sprint`, {
+  const res = await fetch(`${baseUrl}/rest/agile/1.0/board/${boardId}/sprint`, {
     headers,
   });
+  if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
   return res.json();
 }
 
@@ -23,30 +33,21 @@ export async function fetchSubtasks(projectKey: string) {
   const jql = `project=${projectKey} AND issuetype = Sub-task`;
   let allIssues: any[] = [];
   let startAt = 0;
-  const maxResults = 100; // Jira Cloud limit
+  const maxResults = 100;
 
   while (true) {
-    const url = `${domain}/rest/api/3/search?jql=${encodeURIComponent(
+    const url = `${baseUrl}/rest/api/3/search?jql=${encodeURIComponent(
       jql
     )}&startAt=${startAt}&maxResults=${maxResults}`;
 
     const res = await fetch(url, { headers });
-
-    if (!res.ok) {
-      throw new Error(
-        `Failed to fetch subtasks: ${res.status} ${res.statusText}`
-      );
-    }
+    if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
 
     const data = await res.json();
-
     allIssues = [...allIssues, ...data.issues];
 
-    if (data.issues.length < maxResults) {
-      break; // ไม่มีหน้าใหม่แล้ว
-    }
-
-    startAt += maxResults; // ขยับ offset ไปเรื่อย ๆ
+    if (data.issues.length < maxResults) break;
+    startAt += maxResults;
   }
 
   return allIssues || [];
@@ -54,33 +55,25 @@ export async function fetchSubtasks(projectKey: string) {
 
 export async function fetchUsers() {
   const res = await fetch(
-    `${domain}/rest/api/3/users/search?maxResults=1000`,
+    `${baseUrl}/rest/api/3/users/search?maxResults=1000`,
     { headers }
   );
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch users: ${res.status} ${res.statusText}`);
-  }
+  if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
 
   const users = await res.json();
-  // ✅ filter เอาเฉพาะ user ที่ยัง active
   return users.filter((u: any) => u.active) || [];
 }
 
 export async function fetchSubtasksByAssignee(accountId: string) {
   const jql = `issuetype = Sub-task AND assignee = "${accountId}"`;
   const res = await fetch(
-    `${domain}/rest/api/3/search?jql=${encodeURIComponent(
+    `${baseUrl}/rest/api/3/search?jql=${encodeURIComponent(
       jql
     )}&maxResults=9999999`,
     { headers }
   );
 
-  if (!res.ok) {
-    throw new Error(
-      `Failed to fetch subtasks: ${res.status} ${res.statusText}`
-    );
-  }
+  if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
 
   const data = await res.json();
   return data.issues || [];
@@ -92,21 +85,15 @@ export async function fetchAllSubtasks(onChunk: (chunk: any[]) => void) {
 
   while (true) {
     const res = await fetch(
-      `${domain}/rest/api/3/search?jql=issuetype=Sub-task&startAt=${startAt}&maxResults=${maxResults}`,
+      `${baseUrl}/rest/api/3/search?jql=issuetype=Sub-task&startAt=${startAt}&maxResults=${maxResults}`,
       { headers }
     );
-
-    if (!res.ok) {
-      throw new Error(
-        `Failed to fetch subtasks: ${res.status} ${res.statusText}`
-      );
-    }
+    if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
 
     const data = await res.json();
-
     if (!data.issues || data.issues.length === 0) break;
 
-    // ✅ ส่งข้อมูล chunk ให้ UI ใช้งานทันที
+    // ✅ ส่ง chunk กลับไปให้ UI ใช้ก่อน
     onChunk(data.issues);
 
     if (data.startAt + data.maxResults >= data.total) break;

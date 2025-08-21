@@ -50,4 +50,6 @@ export default defineConfig({
 #4. Push Code ไป GitHub
 
 #5. Deploy ไป GitHub Pages
+https://cors-anywhere.herokuapp.com/corsdemo
+npm run build
 npm run deploy
