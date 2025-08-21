@@ -1,69 +1,53 @@
-# React + TypeScript + Vite
+# 📊 React Jira Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Dashboard สำหรับสรุปงานจาก Jira แสดงผลในรูปแบบกราฟและตาราง  
+พัฒนาโดยใช้ **Vite + React + TypeScript + MUI**  
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Getting Started
 
-## Expanding the ESLint configuration
+### 1. Clone Project
+```bash
+git clone https://github.com/<USERNAME>/react-jira-dashboard.git
+cd react-jira-dashboard
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+npm install
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+npm run dev
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+npm run build
+npm run preview
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+🌍 Deploy to GitHub Pages
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+# 1. ติดตั้ง gh-pages
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+npm install gh-pages --save-dev
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+# 2. ตั้งค่า vite.config.ts
+
+แก้ base ให้ตรงกับชื่อ repo (สมมติ repo คือ react-jira-dashboard)
+
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  base: "/react-jira-dashboard/", // 👈 สำคัญ
+});
+
+# 3. เพิ่ม Script ใน package.json
+
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "deploy": "vite build && gh-pages -d dist"
+  }
+
+#4. Push Code ไป GitHub
+
+#5. Deploy ไป GitHub Pages
+npm run deploy
