@@ -1,23 +1,19 @@
-// const domain = import.meta.env.VITE_JIRA_DOMAIN;
+const domain = import.meta.env.VITE_JIRA_DOMAIN;
 const email = import.meta.env.VITE_JIRA_EMAIL;
 const token = import.meta.env.VITE_JIRA_API_TOKEN;
 
 const headers = {
-  Authorization:
-    "Basic " +
-    btoa(
-      `${email}:${token}`
-    ),
+  Authorization: "Basic " + btoa(`${email}:${token}`),
   Accept: "application/json",
 };
 
 export async function fetchProjects() {
-  const res = await fetch(`/jira/rest/api/3/project`, { headers });
+  const res = await fetch(`${domain}/rest/api/3/project`, { headers });
   return res.json();
 }
 
 export async function fetchSprints(boardId: number) {
-  const res = await fetch(`/jira/rest/agile/1.0/board/${boardId}/sprint`, {
+  const res = await fetch(`${domain}/rest/agile/1.0/board/${boardId}/sprint`, {
     headers,
   });
   return res.json();
@@ -30,14 +26,16 @@ export async function fetchSubtasks(projectKey: string) {
   const maxResults = 100; // Jira Cloud limit
 
   while (true) {
-    const url = `/jira/rest/api/3/search?jql=${encodeURIComponent(
+    const url = `${domain}/rest/api/3/search?jql=${encodeURIComponent(
       jql
     )}&startAt=${startAt}&maxResults=${maxResults}`;
 
     const res = await fetch(url, { headers });
 
     if (!res.ok) {
-      throw new Error(`Failed to fetch subtasks: ${res.status} ${res.statusText}`);
+      throw new Error(
+        `Failed to fetch subtasks: ${res.status} ${res.statusText}`
+      );
     }
 
     const data = await res.json();
@@ -51,13 +49,14 @@ export async function fetchSubtasks(projectKey: string) {
     startAt += maxResults; // ขยับ offset ไปเรื่อย ๆ
   }
 
-  return allIssues || [];  ;
+  return allIssues || [];
 }
 
 export async function fetchUsers() {
-  const res = await fetch(`/jira/rest/api/3/users/search?maxResults=1000`, {
-    headers,
-  });
+  const res = await fetch(
+    `${domain}/rest/api/3/users/search?maxResults=1000`,
+    { headers }
+  );
 
   if (!res.ok) {
     throw new Error(`Failed to fetch users: ${res.status} ${res.statusText}`);
@@ -71,29 +70,38 @@ export async function fetchUsers() {
 export async function fetchSubtasksByAssignee(accountId: string) {
   const jql = `issuetype = Sub-task AND assignee = "${accountId}"`;
   const res = await fetch(
-    `/jira/rest/api/3/search?jql=${encodeURIComponent(jql)}&maxResults=9999999`,
+    `${domain}/rest/api/3/search?jql=${encodeURIComponent(
+      jql
+    )}&maxResults=9999999`,
     { headers }
   );
 
   if (!res.ok) {
-    throw new Error(`Failed to fetch subtasks: ${res.status} ${res.statusText}`);
+    throw new Error(
+      `Failed to fetch subtasks: ${res.status} ${res.statusText}`
+    );
   }
 
   const data = await res.json();
   return data.issues || [];
 }
 
-export async function fetchAllSubtasks(
-  onChunk: (chunk: any[]) => void
-) {
+export async function fetchAllSubtasks(onChunk: (chunk: any[]) => void) {
   let startAt = 0;
   const maxResults = 100;
 
   while (true) {
     const res = await fetch(
-      `/jira/rest/api/3/search?jql=issuetype=Sub-task&startAt=${startAt}&maxResults=${maxResults}`,
+      `${domain}/rest/api/3/search?jql=issuetype=Sub-task&startAt=${startAt}&maxResults=${maxResults}`,
       { headers }
     );
+
+    if (!res.ok) {
+      throw new Error(
+        `Failed to fetch subtasks: ${res.status} ${res.statusText}`
+      );
+    }
+
     const data = await res.json();
 
     if (!data.issues || data.issues.length === 0) break;
