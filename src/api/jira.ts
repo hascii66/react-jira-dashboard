@@ -1,4 +1,4 @@
-const domain = import.meta.env.VITE_JIRA_DOMAIN;
+// const domain = import.meta.env.VITE_JIRA_DOMAIN;
 const email = import.meta.env.VITE_JIRA_EMAIL;
 const token = import.meta.env.VITE_JIRA_API_TOKEN;
 

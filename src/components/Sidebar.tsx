@@ -1,14 +1,19 @@
-import { Box, IconButton, Tooltip, Avatar } from "@mui/material";
+import { 
+  Box, 
+  IconButton, 
+  Tooltip, 
+  // Avatar 
+} from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   HomeFilled,
-  Star,
-  Search,
-  ListAlt,
-  People,
-  Settings,
-  Notifications,
-  Info,
+  // Star,
+  // Search,
+  // ListAlt,
+  // People,
+  // Settings,
+  // Notifications,
+  // Info,
 } from "@mui/icons-material";
 
 const menuItems = [
