@@ -5,10 +5,18 @@ const token = import.meta.env.VITE_JIRA_API_TOKEN;
 const isDev = import.meta.env.MODE === "development";
 
 // Dev ใช้ vite proxy, Prod ใช้ CORS proxy
-const proxy = "https://cors-anywhere.herokuapp.com/";
-const domain = "https://sirisoftth.atlassian.net";
+const corsProxy = "https://go-cors-proxy-1.onrender.com";
+// const proxy = "https://cors-anywhere.herokuapp.com/";
+const jiraDomain = "https://sirisoftth.atlassian.net";
 
-const baseUrl = isDev ? "/jira" : `${proxy}${domain}`;
+function buildUrl(path: string) {
+  if (isDev) {
+    return `/jira${path}`;
+  } else {
+    // encode Jira URL เป็น query param
+    return `${corsProxy}/?url=${encodeURIComponent(jiraDomain + path)}`;
+  }
+}
 
 const headers = {
   Authorization: "Basic " + btoa(`${email}:${token}`),
@@ -16,13 +24,13 @@ const headers = {
 };
 
 export async function fetchProjects() {
-  const res = await fetch(`${baseUrl}/rest/api/3/project`, { headers });
+  const res = await fetch(buildUrl(`/rest/api/3/project`), { headers });
   if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
   return res.json();
 }
 
 export async function fetchSprints(boardId: number) {
-  const res = await fetch(`${baseUrl}/rest/agile/1.0/board/${boardId}/sprint`, {
+  const res = await fetch(buildUrl(`/rest/agile/1.0/board/${boardId}/sprint`), {
     headers,
   });
   if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
@@ -36,9 +44,11 @@ export async function fetchSubtasks(projectKey: string) {
   const maxResults = 100;
 
   while (true) {
-    const url = `${baseUrl}/rest/api/3/search?jql=${encodeURIComponent(
-      jql
-    )}&startAt=${startAt}&maxResults=${maxResults}`;
+    const url = buildUrl(
+      `/rest/api/3/search?jql=${encodeURIComponent(
+        jql
+      )}&startAt=${startAt}&maxResults=${maxResults}`
+    );
 
     const res = await fetch(url, { headers });
     if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
@@ -55,7 +65,7 @@ export async function fetchSubtasks(projectKey: string) {
 
 export async function fetchUsers() {
   const res = await fetch(
-    `${baseUrl}/rest/api/3/users/search?maxResults=1000`,
+    buildUrl(`/rest/api/3/users/search?maxResults=1000`),
     { headers }
   );
   if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
@@ -67,9 +77,9 @@ export async function fetchUsers() {
 export async function fetchSubtasksByAssignee(accountId: string) {
   const jql = `issuetype = Sub-task AND assignee = "${accountId}"`;
   const res = await fetch(
-    `${baseUrl}/rest/api/3/search?jql=${encodeURIComponent(
-      jql
-    )}&maxResults=9999999`,
+    buildUrl(
+      `/rest/api/3/search?jql=${encodeURIComponent(jql)}&maxResults=9999999`
+    ),
     { headers }
   );
 
@@ -84,10 +94,11 @@ export async function fetchAllSubtasks(onChunk: (chunk: any[]) => void) {
   const maxResults = 100;
 
   while (true) {
-    const res = await fetch(
-      `${baseUrl}/rest/api/3/search?jql=issuetype=Sub-task&startAt=${startAt}&maxResults=${maxResults}`,
-      { headers }
+    const url = buildUrl(
+      `/rest/api/3/search?jql=issuetype=Sub-task&startAt=${startAt}&maxResults=${maxResults}`
     );
+
+    const res = await fetch(url, { headers });
     if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
 
     const data = await res.json();
