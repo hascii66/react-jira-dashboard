@@ -1,45 +1,45 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+export default async function handler(req: Request): Promise<Response> {
+  const url = new URL(req.url);
+  const path = url.searchParams.get("path");
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { path } = req.query;
-
-  if (!path || typeof path !== "string") {
-    res.status(400).json({ error: "Missing ?path query param" });
-    return;
+  if (!path) {
+    return new Response(JSON.stringify({ error: "Missing ?path query param" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
-  const jiraEmail = process.env.JIRA_EMAIL;
-  const jiraToken = process.env.JIRA_API_TOKEN;
+  const jiraEmail = process.env.JIRA_EMAIL!;
+  const jiraToken = process.env.JIRA_API_TOKEN!;
   const jiraDomain = "https://sirisoftth.atlassian.net";
 
-  if (!jiraEmail || !jiraToken) {
-    res.status(500).json({ error: "Missing Jira credentials in env" });
-    return;
-  }
-
-  const url = `${jiraDomain}${path}`;
+  const jiraUrl = `${jiraDomain}${path}`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(jiraUrl, {
       method: req.method,
       headers: {
-        "Authorization":
+        Authorization:
           "Basic " + Buffer.from(`${jiraEmail}:${jiraToken}`).toString("base64"),
-        "Accept": "application/json",
+        Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: req.method !== "GET" ? JSON.stringify(req.body) : undefined,
+      body: req.method !== "GET" ? await req.text() : undefined,
     });
 
-    const text = await response.text();
+    const data = await response.text();
 
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Content-Type", "application/json");
-    res.status(response.status).send(text);
+    return new Response(data, {
+      status: response.status,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
+    });
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message || "Proxy request failed",
-      stack: err.stack || "",
-    });
+    return new Response(
+      JSON.stringify({ error: err.message || "Proxy request failed" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }
