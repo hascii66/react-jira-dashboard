@@ -4,24 +4,26 @@ const token = import.meta.env.VITE_JIRA_API_TOKEN;
 // ✅ เลือก baseUrl ตาม environment
 const isDev = import.meta.env.MODE === "development";
 
-// Dev ใช้ vite proxy, Prod ใช้ CORS proxy
-const corsProxy = "https://go-cors-proxy-1.onrender.com";
-// const proxy = "https://cors-anywhere.herokuapp.com/";
-const jiraDomain = "https://sirisoftth.atlassian.net";
-
-function buildUrl(path: string) {
+// Dev ใช้ vite proxy, Prod ใช้ Vercel proxy
+function buildUrl(path: string, query?: string) {
   if (isDev) {
-    return `/jira${path}`;
+    return `/jira${path}${query ? `?${query}` : ""}`;
   } else {
-    // encode Jira URL เป็น query param
-    return `${corsProxy}/?url=${encodeURIComponent(jiraDomain + path)}`;
+    return `/api/jira-proxy?path=${encodeURIComponent(path)}${
+      query ? `&${query}` : ""
+    }`;
   }
 }
 
-const headers = {
-  Authorization: "Basic " + btoa(`${email}:${token}`),
+// ✅ Headers แบบปลอดภัย (TypeScript OK)
+const headers: Record<string, string> = {
   Accept: "application/json",
+  ...(isDev
+    ? { Authorization: "Basic " + btoa(`${email}:${token}`) }
+    : {}),
 };
+
+// -------------------- API functions --------------------
 
 export async function fetchProjects() {
   const res = await fetch(buildUrl(`/rest/api/3/project`), { headers });
@@ -45,9 +47,8 @@ export async function fetchSubtasks(projectKey: string) {
 
   while (true) {
     const url = buildUrl(
-      `/rest/api/3/search?jql=${encodeURIComponent(
-        jql
-      )}&startAt=${startAt}&maxResults=${maxResults}`
+      `/rest/api/3/search`,
+      `jql=${encodeURIComponent(jql)}&startAt=${startAt}&maxResults=${maxResults}`
     );
 
     const res = await fetch(url, { headers });
@@ -65,7 +66,7 @@ export async function fetchSubtasks(projectKey: string) {
 
 export async function fetchUsers() {
   const res = await fetch(
-    buildUrl(`/rest/api/3/users/search?maxResults=1000`),
+    buildUrl(`/rest/api/3/users/search`, "maxResults=1000"),
     { headers }
   );
   if (!res.ok) throw new Error(`Failed: ${res.status} ${res.statusText}`);
@@ -78,7 +79,8 @@ export async function fetchSubtasksByAssignee(accountId: string) {
   const jql = `issuetype = Sub-task AND assignee = "${accountId}"`;
   const res = await fetch(
     buildUrl(
-      `/rest/api/3/search?jql=${encodeURIComponent(jql)}&maxResults=9999999`
+      `/rest/api/3/search`,
+      `jql=${encodeURIComponent(jql)}&maxResults=9999999`
     ),
     { headers }
   );
@@ -95,7 +97,8 @@ export async function fetchAllSubtasks(onChunk: (chunk: any[]) => void) {
 
   while (true) {
     const url = buildUrl(
-      `/rest/api/3/search?jql=issuetype=Sub-task&startAt=${startAt}&maxResults=${maxResults}`
+      `/rest/api/3/search`,
+      `jql=issuetype=Sub-task&startAt=${startAt}&maxResults=${maxResults}`
     );
 
     const res = await fetch(url, { headers });
