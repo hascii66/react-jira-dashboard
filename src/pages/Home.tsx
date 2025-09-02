@@ -20,10 +20,12 @@ export default function Home() {
   const [filteredSubtasks, setFilteredSubtasks] = useState<any[]>([]);
   const [sprints, setSprints] = useState<any[]>([]);
   const [assignees, setAssignees] = useState<any[]>([]);
+  const [statuses, setStatuses] = useState<any[]>([]);
 
   const [selectedProject, setSelectedProject] = useState<any | null>(null);
   const [selectedSprint, setSelectedSprint] = useState<any | null>(null);
   const [selectedAssignee, setSelectedAssignee] = useState<any | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<any | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<"detail" | "summary">("detail");
@@ -36,12 +38,12 @@ export default function Home() {
     setSelectedProject(project);
     setSelectedSprint(null);
     setSelectedAssignee(null);
+    setSelectedStatus(null);
 
     if (project) {
       setLoading(true);
       try {
-        const data = await fetchSubtasks(project.key);
-        const issues = data || [];
+        const issues = (await fetchSubtasks(project.key)) || [];
         setAllSubtasks(issues);
         setFilteredSubtasks(issues);
 
@@ -71,12 +73,25 @@ export default function Home() {
             });
           }
         });
-
         const assigneeOptions = [
           { id: "all", name: "All Assignees" },
           ...Array.from(assigneeSet.values()),
         ];
         setAssignees(assigneeOptions);
+
+        // ✅ Extract status list
+        const statusSet = new Map<string, any>();
+        issues.forEach((issue) => {
+          const st = issue.fields.status;
+          if (st) {
+            statusSet.set(st.name, { id: st.name, name: st.name });
+          }
+        });
+        const statusOptions = [
+          { id: "all", name: "All Statuses" },
+          ...Array.from(statusSet.values()),
+        ];
+        setStatuses(statusOptions);
       } finally {
         setLoading(false);
       }
@@ -85,20 +100,26 @@ export default function Home() {
       setFilteredSubtasks([]);
       setSprints([]);
       setAssignees([]);
+      setStatuses([]);
     }
   };
 
   const handleSprintChange = (_: any, sprint: any | null) => {
     setSelectedSprint(sprint);
-    filterData(sprint, selectedAssignee);
+    filterData(sprint, selectedAssignee, selectedStatus);
   };
 
   const handleAssigneeChange = (_: any, assignee: any | null) => {
     setSelectedAssignee(assignee);
-    filterData(selectedSprint, assignee);
+    filterData(selectedSprint, assignee, selectedStatus);
   };
 
-  const filterData = (sprint: any, assignee: any) => {
+  const handleStatusChange = (_: any, status: any | null) => {
+    setSelectedStatus(status);
+    filterData(selectedSprint, selectedAssignee, status);
+  };
+
+  const filterData = (sprint: any, assignee: any, status: any) => {
     let filtered = allSubtasks;
 
     // ✅ Filter sprint
@@ -116,6 +137,13 @@ export default function Home() {
     if (assignee && assignee.id !== "all") {
       filtered = filtered.filter(
         (issue) => issue.fields.assignee?.accountId === assignee.id
+      );
+    }
+
+    // ✅ Filter status
+    if (status && status.id !== "all") {
+      filtered = filtered.filter(
+        (issue) => issue.fields.status?.name === status.id
       );
     }
 
@@ -168,6 +196,24 @@ export default function Home() {
                 <TextField
                   {...params}
                   label="Select Assignee"
+                  variant="outlined"
+                />
+              )}
+              fullWidth
+            />
+          </Box>
+
+          {/* ✅ Select Status */}
+          <Box mb={2}>
+            <Autocomplete
+              options={statuses}
+              getOptionLabel={(option) => option.name}
+              value={selectedStatus}
+              onChange={handleStatusChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Status"
                   variant="outlined"
                 />
               )}
