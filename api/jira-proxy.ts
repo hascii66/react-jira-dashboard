@@ -8,9 +8,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const jiraEmail = process.env.JIRA_EMAIL!;
-  const jiraToken = process.env.JIRA_API_TOKEN!;
+  const jiraEmail = process.env.JIRA_EMAIL;
+  const jiraToken = process.env.JIRA_API_TOKEN;
   const jiraDomain = "https://sirisoftth.atlassian.net";
+
+  if (!jiraEmail || !jiraToken) {
+    res.status(500).json({ error: "Missing Jira credentials in env" });
+    return;
+  }
 
   const url = `${jiraDomain}${path}`;
 
@@ -26,11 +31,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: req.method !== "GET" ? JSON.stringify(req.body) : undefined,
     });
 
-    const data = await response.text();
-    res.setHeader("Content-Type", "application/json");
+    const text = await response.text();
+
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.status(response.status).send(data);
+    res.setHeader("Content-Type", "application/json");
+    res.status(response.status).send(text);
   } catch (err: any) {
-    res.status(500).json({ error: err.message || "Proxy request failed" });
+    res.status(500).json({
+      error: err.message || "Proxy request failed",
+      stack: err.stack || "",
+    });
   }
 }
