@@ -9,6 +9,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import Autocomplete from "@mui/material/Autocomplete";
 import { fetchAllSubtasks } from "../api/jira";
 import {
@@ -112,12 +113,12 @@ export default function AssigneeSummaryPage() {
       setLoading(false);
       setDone(true);
 
-    //   setCache({
-    //     summary: data,
-    //     options: assigneeOptions,
-    //     done: true,
-    //     loading: false,
-    //   });
+      //   setCache({
+      //     summary: data,
+      //     options: assigneeOptions,
+      //     done: true,
+      //     loading: false,
+      //   });
     });
   }, []);
 
@@ -175,30 +176,39 @@ export default function AssigneeSummaryPage() {
       </Box>
 
       {/* ✅ Filters */}
-      <Box display="flex" gap={2} mb={2}>
-        <Autocomplete
-          options={[{ id: "all", name: "All Assignees" }, ...assigneeOptions]}
-          getOptionLabel={(option) => option.name}
-          value={selectedAssignee}
-          onChange={(_, val) => setSelectedAssignee(val)}
-          renderInput={(params) => (
-            <TextField {...params} label="Filter by Assignee" />
-          )}
-          sx={{ flex: 1 }}
-        />
 
-        <Autocomplete
-          options={[{ id: "all", name: "All Projects" }, ...projectOptions]}
-          getOptionLabel={(option) => option.name}
-          value={selectedProject}
-          onChange={(_, val) => setSelectedProject(val)}
-          renderInput={(params) => (
-            <TextField {...params} label="Filter by Project" />
-          )}
-          sx={{ flex: 1 }}
-        />
+      <Box sx={{ flexGrow: 1, mb: 2 }}>
+        <Grid container spacing={2}>
+          {/* Select Project */}
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Autocomplete
+              options={[
+                { id: "all", name: "All Assignees" },
+                ...assigneeOptions,
+              ]}
+              getOptionLabel={(option) => option.name}
+              value={selectedAssignee}
+              onChange={(_, val) => setSelectedAssignee(val)}
+              renderInput={(params) => (
+                <TextField {...params} label="Filter by Assignee" />
+              )}
+              fullWidth
+            />
+          </Grid>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Autocomplete
+              options={[{ id: "all", name: "All Projects" }, ...projectOptions]}
+              getOptionLabel={(option) => option.name}
+              value={selectedProject}
+              onChange={(_, val) => setSelectedProject(val)}
+              renderInput={(params) => (
+                <TextField {...params} label="Filter by Project" />
+              )}
+              fullWidth
+            />
+          </Grid>
+        </Grid>
       </Box>
-
       <>
         {done && <Typography sx={{ mt: 2 }}>✅ Loaded all subtasks</Typography>}
 

@@ -8,6 +8,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import Autocomplete from "@mui/material/Autocomplete";
 import IssuesTable from "../components/IssuesTable";
 import SummaryTable from "../components/SummaryTable";
@@ -152,76 +153,84 @@ export default function Home() {
 
   return (
     <Container sx={{ mt: 4 }}>
-      {/* Select Project */}
-      <Box mb={2}>
-        <Autocomplete
-          options={projects}
-          getOptionLabel={(option) => option.name}
-          onChange={handleProjectChange}
-          renderInput={(params) => (
-            <TextField {...params} label="Search Project" variant="outlined" />
+      <Box sx={{ flexGrow: 1, mb: 2 }}>
+        <Grid container spacing={2}>
+          {/* Select Project */}
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Autocomplete
+              options={projects}
+              getOptionLabel={(option) => option.name}
+              onChange={handleProjectChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Search Project"
+                  variant="outlined"
+                />
+              )}
+              fullWidth
+            />
+          </Grid>
+
+          {selectedProject && !loading && (
+            <>
+              {/* Select Sprint */}
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Autocomplete
+                  options={sprints}
+                  getOptionLabel={(option) => option.name}
+                  value={selectedSprint}
+                  onChange={handleSprintChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Select Sprint"
+                      variant="outlined"
+                    />
+                  )}
+                  fullWidth
+                />
+              </Grid>
+
+              {/* Select Assignee */}
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Autocomplete
+                  options={assignees}
+                  getOptionLabel={(option) => option.name}
+                  value={selectedAssignee}
+                  onChange={handleAssigneeChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Select Assignee"
+                      variant="outlined"
+                    />
+                  )}
+                  fullWidth
+                />
+              </Grid>
+
+              {/* Select Status */}
+              <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Autocomplete
+                  options={statuses}
+                  getOptionLabel={(option) => option.name}
+                  value={selectedStatus}
+                  onChange={handleStatusChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Select Status"
+                      variant="outlined"
+                    />
+                  )}
+                  fullWidth
+                />
+              </Grid>
+            </>
           )}
-          fullWidth
-        />
+        </Grid>
       </Box>
-
-      {selectedProject && !loading && (
-        <>
-          {/* Select Sprint */}
-          <Box mb={2}>
-            <Autocomplete
-              options={sprints}
-              getOptionLabel={(option) => option.name}
-              value={selectedSprint}
-              onChange={handleSprintChange}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Select Sprint"
-                  variant="outlined"
-                />
-              )}
-              fullWidth
-            />
-          </Box>
-
-          {/* Select Assignee */}
-          <Box mb={2}>
-            <Autocomplete
-              options={assignees}
-              getOptionLabel={(option) => option.name}
-              value={selectedAssignee}
-              onChange={handleAssigneeChange}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Select Assignee"
-                  variant="outlined"
-                />
-              )}
-              fullWidth
-            />
-          </Box>
-
-          {/* ✅ Select Status */}
-          <Box mb={2}>
-            <Autocomplete
-              options={statuses}
-              getOptionLabel={(option) => option.name}
-              value={selectedStatus}
-              onChange={handleStatusChange}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Select Status"
-                  variant="outlined"
-                />
-              )}
-              fullWidth
-            />
-          </Box>
-        </>
-      )}
 
       <Typography variant="h6" gutterBottom>
         Sub-tasks in {selectedProject?.name || "-"}

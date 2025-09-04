@@ -7,6 +7,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from "@mui/material";
+import Grid from "@mui/material/Grid";
 import Autocomplete from "@mui/material/Autocomplete";
 import { fetchUsers, fetchSubtasksByAssignee } from "../api/jira";
 import TasksTable from "../components/TasksTable";
@@ -54,17 +55,27 @@ export default function AssigneePage() {
 
   return (
     <Container sx={{ mt: 4 }}>
-      <Box mb={2}>
-        <Autocomplete
-          options={assignees}
-          getOptionLabel={(option) => option.name}
-          value={selectedAssignee}
-          onChange={handleAssigneeChange}
-          renderInput={(params) => (
-            <TextField {...params} label="Select Assignee" variant="outlined" />
-          )}
-          fullWidth
-        />
+      <Box sx={{ flexGrow: 1, mb: 2 }}>
+        <Grid container spacing={2}>
+          {/* ✅ Select Assignee */}
+
+          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+            <Autocomplete
+              options={assignees}
+              getOptionLabel={(option) => option.name}
+              value={selectedAssignee}
+              onChange={handleAssigneeChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select Assignee"
+                  variant="outlined"
+                />
+              )}
+              fullWidth
+            />
+          </Grid>
+        </Grid>
       </Box>
 
       {/* ✅ Toggle View */}
